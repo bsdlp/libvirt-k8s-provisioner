@@ -17,64 +17,64 @@ provider "libvirt" {
 }
 
 resource "libvirt_volume" "os_image" {
-  count = var.vm_count
-  name = "${var.hostname}-${count.index}-os_image"
-  pool = var.libvirt_pool
+  count  = var.vm_count
+  name   = "${var.hostname}-${count.index}-os_image"
+  pool   = var.libvirt_pool
   source = "/tmp/${var.os_image_name}"
   format = "qcow2"
 }
 
 resource "libvirt_volume" "os_image_resized" {
-  count = var.vm_count
-  name = "${var.hostname}-os_image_resized-${count.index}"
-  pool = var.libvirt_pool
+  count          = var.vm_count
+  name           = "${var.hostname}-os_image_resized-${count.index}"
+  pool           = var.libvirt_pool
   base_volume_id = libvirt_volume.os_image[count.index].id
-  size           = var.disk_size*1073741824
+  size           = var.disk_size * 1073741824
 }
 
 resource "libvirt_volume" "rook_image" {
-  count = var.vm_count
-  name = "${var.hostname}-${count.index}-rook_image"
-  pool = var.libvirt_pool
-  size = var.rook_volume_size*1073741824
+  count  = var.vm_count
+  name   = "${var.hostname}-${count.index}-rook_image"
+  pool   = var.libvirt_pool
+  size   = var.rook_volume_size * 1073741824
   format = "qcow2"
 }
 
 resource "libvirt_cloudinit_disk" "commoninit" {
-  count = var.vm_count
-  name = "${var.hostname}-${count.index}-commoninit.iso"
-  pool = var.libvirt_pool
+  count     = var.vm_count
+  name      = "${var.hostname}-${count.index}-commoninit.iso"
+  pool      = var.libvirt_pool
   user_data = data.template_file.user_data[count.index].rendered
 }
 
 data "template_file" "user_data" {
-  count = var.vm_count
+  count    = var.vm_count
   template = file("${path.module}/cloud_init.cfg")
   vars = {
     network_manager = var.os == "centos" ? "NetworkManager" : "network-manager"
-    hostname = "${var.hostname}-${count.index}.${var.domain}"
-    fqdn = "${var.hostname}-${count.index}.${var.domain}"
-    sshKey = var.sshKey
-   }
+    hostname        = "${var.hostname}-${count.index}"
+    fqdn            = "${var.hostname}-${count.index}"
+    sshKey          = var.sshKey
+  }
 }
 
 resource "libvirt_domain" "k8s-worker" {
   autostart = true
-  count= var.vm_count
-  name = "${var.hostname}-${count.index}"
-  memory = var.memory*1024
-  vcpu = var.cpu
+  count     = var.vm_count
+  name      = "${var.hostname}-${count.index}"
+  memory    = var.memory * 1024
+  vcpu      = var.cpu
 
   disk {
-     volume_id = libvirt_volume.os_image_resized[count.index].id
+    volume_id = libvirt_volume.os_image_resized[count.index].id
   }
 
   disk {
-     volume_id = libvirt_volume.rook_image[count.index].id
+    volume_id = libvirt_volume.rook_image[count.index].id
   }
 
   network_interface {
-       network_name = var.libvirt_network
+    network_name = var.libvirt_network
   }
 
   cloudinit = libvirt_cloudinit_disk.commoninit[count.index].id
@@ -86,14 +86,14 @@ resource "libvirt_domain" "k8s-worker" {
   }
 
   graphics {
-    type = "spice"
+    type        = "spice"
     listen_type = "address"
-    autoport = "true"
+    autoport    = "true"
   }
 }
 
 terraform {
- required_version = ">= 1.0"
+  required_version = ">= 1.0"
   required_providers {
     libvirt = {
       source  = "dmacvicar/libvirt"

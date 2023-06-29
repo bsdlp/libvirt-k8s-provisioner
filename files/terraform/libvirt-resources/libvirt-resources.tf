@@ -1,10 +1,11 @@
 variable "domain" { default = "k8s.lab" }
 variable "network_cidr" {
-  type = list
+  type    = list(any)
   default = ["192.168.100.0/24"]
 }
 variable "cluster_name" { default = "k8s" }
 variable "libvirt_pool_path" { default = "/var/lib/libvirt/images" }
+variable "bridge_name" { default = "br0" }
 
 provider "libvirt" {
   uri = "qemu:///system"
@@ -18,30 +19,16 @@ resource "libvirt_pool" "cluster" {
 
 resource "libvirt_network" "kube_network" {
   autostart = true
-  name = var.cluster_name
-  mode = "nat"
-  domain = var.domain
-  addresses = var.network_cidr
-  bridge = var.cluster_name
-
-  dns {
-    enabled = true
-    local_only = true
-  }
-
-  dnsmasq_options {
-    options  {
-        option_name = "server"
-        option_value = "/${var.domain}/${cidrhost(var.network_cidr[0],1)}"
-      }
-  }
+  name      = var.cluster_name
+  mode      = "bridge"
+  bridge    = var.bridge_name
 }
 
 terraform {
   required_version = ">= 1.0"
   required_providers {
     libvirt = {
-      source = "registry.terraform.io/dmacvicar/libvirt"
+      source  = "registry.terraform.io/dmacvicar/libvirt"
       version = "0.7.1"
     }
   }

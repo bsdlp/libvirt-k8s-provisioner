@@ -1,12 +1,12 @@
 # General configuration
 k8s:
-  cluster_name: k8s-test
+  cluster_name: pounce
   cluster_os: Ubuntu
-  cluster_version: "1.24"
+  cluster_version: "1.27"
   container_runtime: crio
   master_schedulable: false
 
-# Nodes configuration
+  # Nodes configuration
 
   control_plane:
     vcpu: 2
@@ -15,21 +15,22 @@ k8s:
     disk: 40
 
   worker_nodes:
-    vcpu: 2
-    mem: 2
+    vcpu: 8
+    mem: 56
     vms: 1
-    disk: 40
+    disk: 512
 
-# Network configuration
+  # Network configuration
 
   network:
-    network_cidr: 192.168.200.0/24
-    domain: k8s.test
+    network_cidr: 192.168.0.0/16
+    domain: catnet
     additional_san: ""
-    pod_cidr: 10.20.0.0/16
-    service_cidr: 10.110.0.0/16
+    pod_cidr: 10.1.0.0/16
+    service_cidr: 10.2.0.0/16
+    name: br0
 
-# Choose between [calico/flannel/cilium]
+    # Choose between [calico/flannel/cilium]
     cni_plugin: cilium
 
 # Rook configuration
@@ -50,6 +51,6 @@ ingress_controller:
 # Section for metalLB setup
 
 metallb:
-  install_metallb: false
+  install_metallb: true
   l2:
     iprange: 192.168.200.210-192.168.200.250

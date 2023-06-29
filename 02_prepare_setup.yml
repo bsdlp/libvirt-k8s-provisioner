@@ -120,8 +120,8 @@
       when: k8s.cluster_os == 'CentOS'
 
     - name: Download Ubuntu image
-      ansible.builtin.get_url:
-        url: "{{ ubuntu_jammy.cloud_image }}"
+      ansible.builtin.copy:
+        src: files/jammy-server-cloudimg-amd64.img
         dest: /tmp/{{ image_name }}.qcow2
         mode: 0777
       when: k8s.cluster_os == 'Ubuntu'
